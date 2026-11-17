@@ -18,10 +18,9 @@ function App() {
   const [notice,setNotice] = useState('')
   const [active,setActive] = useState<Game|null>(null)
   const [step,setStep] = useState(0)
-  const [answers,setAnswers] = useState<number[]>([])
   const [showAll,setShowAll] = useState(false)
   const filtered = useMemo(()=>games.filter(g=>(category==='Tất cả'||g.category===category)&&(`${g.title} ${g.description}`.toLowerCase().includes(query.toLowerCase()))),[category,query])
-  const start=(game:Game)=>{setActive(game);setStep(0);setAnswers([])}
+  const start=(game:Game)=>{setActive(game);setStep(0)}
   const finish=active && step>=active.questions.length
   const join=()=>{setNotice(joinCode.trim()?'Không tìm thấy phòng công khai với mã này. Hãy kiểm tra lại mã tham gia.':'Bạn hãy nhập mã tham gia của một trò chơi công khai.')}
   return <main className="app-shell">
@@ -66,7 +65,7 @@ function App() {
     <section className="how-section" id="how"><div className="how-heading"><span className="eyebrow">START IN THREE STEPS · 03</span><h2>Bắt đầu thật <em>đơn giản.</em></h2></div><div className="steps"><div><span>01</span><b>Chọn trò chơi</b><p>Khám phá thư viện và chọn chủ đề bạn yêu thích.</p></div><div><span>02</span><b>Tham gia</b><p>Chơi thử trực tiếp hoặc nhập mã phòng công khai.</p></div><div><span>03</span><b>Vui hết mình</b><p>Trả lời câu hỏi, khám phá kết quả và chia sẻ niềm vui.</p></div></div></section>
     <footer className="site-footer"><a className="logo" href="#home"><span className="logo-icon">✳</span><span>play<span className="logo-accent">room</span><small>LEARN · PLAY · CONNECT</small></span></a><span>Made for curious minds, with a little joy. ♡</span><a href="#home">Về đầu trang ↑</a></footer>
 
-    {active&&<div className="quiz-overlay" role="dialog" aria-modal="true" aria-label={active.title}><div className="quiz-panel"><button className="quiz-close" onClick={()=>setActive(null)} aria-label="Đóng">×</button><span className="eyebrow">PLAYROOM ORIGINAL · {active.category.toUpperCase()}</span><div className="quiz-progress"><i style={{width:`${Math.min(step,active.questions.length)/active.questions.length*100}%`}}/></div>{!finish?<><small className="quiz-counter">CÂU HỎI {step+1} / {active.questions.length}</small><h2>{active.questions[step]}</h2><div className="quiz-answers">{active.options[step].map((option,i)=><button key={option} onClick={()=>{setAnswers(a=>[...a,i]);setStep(s=>s+1)}}><span>{String.fromCharCode(65+i)}</span>{option}<b>→</b></button>)}</div></>:<div className="quiz-result"><span>✳</span><h2>Hoàn thành thử thách!</h2><p>Bạn đã hoàn thành {active.title}. Cảm ơn bạn đã tham gia chơi.</p><button className="primary-button" onClick={()=>{setStep(0);setAnswers([])}}>Chơi lại <span>↻</span></button><button className="secondary-link" onClick={()=>setActive(null)}>Quay lại thư viện</button></div>}<div className="quiz-foot">PLAYROOM <span>♡</span></div></div></div>}
+    {active&&<div className="quiz-overlay" role="dialog" aria-modal="true" aria-label={active.title}><div className="quiz-panel"><button className="quiz-close" onClick={()=>setActive(null)} aria-label="Đóng">×</button><span className="eyebrow">PLAYROOM ORIGINAL · {active.category.toUpperCase()}</span><div className="quiz-progress"><i style={{width:`${Math.min(step,active.questions.length)/active.questions.length*100}%`}}/></div>{!finish?<><small className="quiz-counter">CÂU HỎI {step+1} / {active.questions.length}</small><h2>{active.questions[step]}</h2><div className="quiz-answers">{active.options[step].map((option,i)=><button key={option} onClick={()=>setStep(s=>s+1)}><span>{String.fromCharCode(65+i)}</span>{option}<b>→</b></button>)}</div></>:<div className="quiz-result"><span>✳</span><h2>Hoàn thành thử thách!</h2><p>Bạn đã hoàn thành {active.title}. Cảm ơn bạn đã tham gia chơi.</p><button className="primary-button" onClick={()=>setStep(0)}>Chơi lại <span>↻</span></button><button className="secondary-link" onClick={()=>setActive(null)}>Quay lại thư viện</button></div>}<div className="quiz-foot">PLAYROOM <span>♡</span></div></div></div>}
   </main>
 }
 export default App
