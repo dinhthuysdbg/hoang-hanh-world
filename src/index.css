@@ -1,7 +1,7 @@
-:root{font-family:'DM Sans',sans-serif;color:#40333b;background:#fffdfd;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-optical-sizing:auto;font-weight:400}
+:root{font-family:'Be Vietnam Pro',sans-serif;color:#292526;background:#fbf9f7;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-weight:400}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;min-width:320px;min-height:100vh}
 #root{width:100%;min-height:100vh}
 button,a{font:inherit}
-::selection{background:#f3dce4;color:#684a59}
+::selection{background:#ead6d2;color:#493638}
