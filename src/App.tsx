@@ -1,89 +1,72 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 
-type IconName = 'heart' | 'sparkles' | 'arrow' | 'lock' | 'gift' | 'ticket' | 'sun' | 'close'
-function Icon({ name, size = 22 }: { name: IconName; size?: number }) {
-  const paths: Record<IconName, React.ReactNode> = {
-    heart: <path d="M20.8 8.8c0 5.1-8.8 10.1-8.8 10.1S3.2 13.9 3.2 8.8A4.6 4.6 0 0 1 12 6.5a4.6 4.6 0 0 1 8.8 2.3Z"/>,
-    sparkles: <><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></>,
-    arrow: <><path d="M4 12h15m-6-6 6 6-6 6"/></>,
-    lock: <><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3"/></>,
-    gift: <><path d="M3 10h18v11H3zM2 6h20v4H2zM12 6v15"/><path d="M12 6H8.5a2.5 2.5 0 1 1 2.2-3.7L12 6Zm0 0h3.5a2.5 2.5 0 1 0-2.2-3.7L12 6Z"/></>,
-    ticket: <><path d="M4 6h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4V6Z"/><path d="M12 7v2m0 3v2m0 3v1"/></>,
-    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></>,
-    close: <path d="m6 6 12 12M18 6 6 18"/>
-  }
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
-}
-const questions = [
-  { title: 'Một ngày rảnh rỗi, bạn muốn…', options: ['Đi đâu đó thật xa', 'Ở nhà, ăn ngon và xem phim', 'Dạo phố, khám phá quán mới', 'Chỉ cần ở cạnh người mình thương'], results: ['Bạn yêu tự do và những trải nghiệm mới.', 'Bạn tìm thấy hạnh phúc trong sự bình yên.', 'Bạn có tâm hồn tò mò và đầy năng lượng.', 'Với bạn, đúng người quan trọng hơn đúng nơi.'] },
-  { title: 'Khi muốn nói lời yêu thương, bạn thường…', options: ['Nói thẳng bằng lời', 'Làm một điều nhỏ bất ngờ', 'Dành thời gian ở bên nhau', 'Nhớ những điều người ấy thích'], results: ['Bạn chân thành và không ngại bày tỏ.', 'Bạn tinh tế, thích yêu bằng hành động.', 'Bạn coi thời gian là món quà quý nhất.', 'Bạn yêu bằng sự quan tâm rất riêng.'] },
-  { title: 'Điều làm bạn thấy được yêu nhất là…', options: ['Một cái ôm thật lâu', 'Một tin nhắn hỏi han', 'Được lắng nghe và thấu hiểu', 'Cùng nhau làm những việc bình thường'], results: ['Bạn trân trọng sự gần gũi và ấm áp.', 'Bạn để ý những quan tâm nhỏ mỗi ngày.', 'Bạn cần một kết nối sâu sắc.', 'Bạn tin hạnh phúc nằm trong đồng hành.'] },
-  { title: 'Nếu chọn một món quà, bạn sẽ chọn…', options: ['Một chuyến đi', 'Một món đồ được chọn kỹ', 'Một bữa tối tự tay chuẩn bị', 'Một cuốn album kỷ niệm'], results: ['Bạn thích lưu giữ những trải nghiệm.', 'Bạn trân trọng sự tinh tế và để tâm.', 'Bạn trao yêu thương qua chăm sóc.', 'Bạn là người sống tình cảm và hoài niệm.'] },
+type Game = { id: number; title: string; description: string; category: string; players: string; duration: string; tone: string; questions: string[]; options: string[][] }
+const games: Game[] = [
+  { id: 1, title: 'Ngôn ngữ yêu thương', description: 'Khám phá cách bạn trao đi và đón nhận yêu thương.', category: 'Tình yêu', players: '2–8 người', duration: '5 phút', tone: 'rose', questions: ['Một ngày rảnh, bạn muốn làm gì nhất?', 'Điều gì khiến bạn cảm thấy được quan tâm?', 'Bạn thích nhận món quà nào?'], options: [['Đi đâu đó thật xa','Ở nhà nghỉ ngơi','Khám phá một nơi mới','Ở cạnh người thương'],['Một lời hỏi han','Một cái ôm','Được lắng nghe','Một hành động nhỏ'],['Một chuyến đi','Món quà bất ngờ','Bữa ăn tự nấu','Album kỷ niệm']] },
+  { id: 2, title: 'Bạn hiểu người ấy đến đâu?', description: 'Thử xem bạn nhớ được bao nhiêu điều nhỏ bé về nhau.', category: 'Tình yêu', players: '2–6 người', duration: '7 phút', tone: 'lilac', questions: ['Người ấy thích buổi hẹn nào?', 'Món quà nào sẽ làm người ấy vui?', 'Một ngày lý tưởng của người ấy là?'], options: [['Đi xem phim','Ăn tối','Đi dạo','Ở nhà'],['Hoa','Sách','Đồ công nghệ','Một bức thư'],['Nghỉ ngơi','Đi chơi','Gặp bạn bè','Ở bên gia đình']] },
+  { id: 3, title: 'Đố vui kiến thức tổng hợp', description: '10 câu hỏi nhanh để khởi động trí tò mò.', category: 'Kiến thức', players: '1–20 người', duration: '4 phút', tone: 'blue', questions: ['Hành tinh nào gần Mặt Trời nhất?', 'Đại dương lớn nhất là?', 'Một năm thường có bao nhiêu ngày?'], options: [['Sao Kim','Sao Thủy','Trái Đất','Sao Hỏa'],['Đại Tây Dương','Ấn Độ Dương','Thái Bình Dương','Bắc Băng Dương'],['364','365','366','360']] },
+  { id: 4, title: 'Thử thách trí nhớ', description: 'Quan sát, ghi nhớ và chọn đáp án thật nhanh.', category: 'Trí tuệ', players: '1–10 người', duration: '3 phút', tone: 'yellow', questions: ['Bạn thường ghi nhớ tốt nhất điều gì?', 'Khi học điều mới, bạn thích cách nào?', 'Bạn chọn thử thách nào?'], options: [['Hình ảnh','Con số','Âm thanh','Câu chuyện'],['Thực hành','Đọc hiểu','Nghe giảng','Thảo luận'],['Câu đố logic','Tìm điểm khác nhau','Ghi nhớ hình','Tính nhẩm']] },
+  { id: 5, title: 'Một ngày tích cực', description: 'Những câu hỏi nhỏ giúp cả nhóm bắt đầu ngày mới.', category: 'Phong cách sống', players: '2–12 người', duration: '5 phút', tone: 'green', questions: ['Điều gì làm bạn vui hôm nay?', 'Bạn muốn dành thời gian cho việc gì?', 'Năng lượng của bạn lúc này?'], options: [['Một cuộc gọi','Một tách cà phê','Một lời khen','Một kế hoạch'],['Gia đình','Bạn bè','Bản thân','Công việc'],['Tràn đầy','Bình thường','Cần nghỉ ngơi','Sẵn sàng bứt phá']] },
+  { id: 6, title: 'Quiz dành cho hội bạn', description: 'Vừa chơi vừa khám phá những điều bất ngờ về hội bạn.', category: 'Giải trí', players: '3–16 người', duration: '6 phút', tone: 'orange', questions: ['Ai thường đến muộn nhất?', 'Cả nhóm thích hoạt động nào?', 'Nếu đi chơi ngay, bạn chọn đâu?'], options: [['Tôi','Bạn thân','Người tổ chức','Không ai cả'],['Ăn uống','Du lịch','Chơi game','Xem phim'],['Biển','Núi','Thành phố','Ở nhà']] },
 ]
-const games = [
-  { icon: 'sparkles' as const, number: '01', title: 'Khám phá ngôn ngữ yêu', text: 'Bạn thường trao và nhận yêu thương theo cách nào?', label: '4 câu hỏi', action: 'Chơi ngay', playable: true },
-  { icon: 'heart' as const, number: '02', title: 'Bạn hiểu người ấy đến đâu?', text: 'Một bài trắc nghiệm vui về sự tinh ý trong tình yêu.', label: 'Đang hoàn thiện', action: 'Sắp ra mắt', playable: false },
-  { icon: 'ticket' as const, number: '03', title: 'Chiếc vé bất ngờ', text: 'Mở một gợi ý hẹn hò ngẫu nhiên cho hôm nay.', label: 'Đang hoàn thiện', action: 'Sắp ra mắt', playable: false },
-  { icon: 'gift' as const, number: '04', title: '7 ngày dịu dàng', text: 'Bảy thử thách nhỏ để ngày nào cũng có điều vui.', label: 'Đang hoàn thiện', action: 'Sắp ra mắt', playable: false },
-]
+const categories = ['Tất cả','Tình yêu','Kiến thức','Trí tuệ','Phong cách sống','Giải trí']
 function App() {
-  const [quizOpen, setQuizOpen] = useState(false)
-  const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState<number[]>([])
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const score = useMemo(() => answers.reduce((sum, value) => sum + value, 0), [answers])
-  const finished = answers.length === questions.length
-  const startQuiz = () => { setStep(0); setAnswers([]); setQuizOpen(true) }
-  const pick = (value: number) => { setAnswers(current => [...current, value]); setStep(current => current + 1) }
-  const result = questions[score % questions.length].results[answers[score % questions.length] ?? 0]
-  const unlock = (event: React.FormEvent) => { event.preventDefault(); setError('Đăng nhập riêng tư chưa được cấu hình. Không nhập mật khẩu thật ở bản xem trước này.') }
-  return <main className="page" id="top">
-    <header className="header">
-      <a className="brand" href="#top" aria-label="The Little Love Club"><span className="brand-mark"><Icon name="heart" size={19}/></span><span className="brand-name">THE LITTLE LOVE CLUB<span>A LITTLE CORNER OF JOY</span></span></a>
-      <nav className="navigation"><a href="#play">Trò chơi</a><a href="#story">Tinh thần</a><a href="#our-place">Góc riêng</a></nav>
-      <a className="header-cta" href="#our-place">Dành cho hai người <Icon name="arrow" size={15}/></a>
+  const [query,setQuery] = useState('')
+  const [category,setCategory] = useState('Tất cả')
+  const [joinCode,setJoinCode] = useState('')
+  const [notice,setNotice] = useState('')
+  const [active,setActive] = useState<Game|null>(null)
+  const [step,setStep] = useState(0)
+  const [answers,setAnswers] = useState<number[]>([])
+  const [showAll,setShowAll] = useState(false)
+  const filtered = useMemo(()=>games.filter(g=>(category==='Tất cả'||g.category===category)&&(`${g.title} ${g.description}`.toLowerCase().includes(query.toLowerCase()))),[category,query])
+  const start=(game:Game)=>{setActive(game);setStep(0);setAnswers([])}
+  const finish=active && step>=active.questions.length
+  const join=()=>{setNotice(joinCode.trim()?'Không tìm thấy phòng công khai với mã này. Hãy kiểm tra lại mã tham gia.':'Bạn hãy nhập mã tham gia của một trò chơi công khai.')}
+  return <main className="app-shell">
+    <header className="topbar">
+      <a className="logo" href="#home"><span className="logo-icon">✳</span><span>play<span className="logo-accent">room</span><small>LEARN · PLAY · CONNECT</small></span></a>
+      <nav className="main-nav"><a className="nav-active" href="#discover">Khám phá</a><a href="#categories">Danh mục</a><a href="#how">Cách chơi</a></nav>
+      <div className="top-actions"><a className="text-button" href="#how">Dành cho người tổ chức</a><a className="login-button" href="#join">Tham gia trò chơi <span>↗</span></a></div>
     </header>
 
-    <section className="hero">
-      <div className="hero-grain"/>
-      <div className="hero-content">
-        <div className="overline"><span/> A LITTLE PLAYGROUND FOR THE HEART</div>
-        <h1>Yêu đời một chút.<br/><em>Thương nhau nhiều hơn.</em></h1>
-        <p className="hero-description">Một góc nhỏ để chơi vài trò vui, khám phá những điều đáng yêu và giữ lại chút dịu dàng giữa những ngày bận rộn.</p>
-        <div className="hero-actions"><button className="button button-dark" onClick={startQuiz}>Khám phá ngay <Icon name="arrow" size={16}/></button><a className="text-link" href="#play">Xem các trò chơi <span>↓</span></a></div>
-        <div className="hero-caption"><span><Icon name="sun" size={15}/> Một chút vui mỗi ngày</span><span>EST. WITH LOVE · 2026</span></div>
+    <section className="welcome-hero" id="home">
+      <div className="hero-copy">
+        <div className="eyebrow"><span className="live-dot"/> KHÔNG GIAN HỌC HỎI & GIẢI TRÍ</div>
+        <h1>Mỗi lần chơi,<br/><em>thêm một điều hay.</em></h1>
+        <p>Khám phá những bộ câu hỏi thú vị, thử thách kiến thức và kết nối với mọi người qua những trò chơi tương tác.</p>
+        <div className="hero-cta-row"><a className="primary-button" href="#discover">Khám phá trò chơi <span>→</span></a><a className="secondary-link" href="#how">Tìm hiểu cách chơi <span>↗</span></a></div>
+        <div className="hero-proof"><span className="avatar-stack"><i>H</i><i>♡</i><i>友</i></span><span>Chơi vui cùng bạn bè, gia đình và người thương</span></div>
       </div>
-      <div className="hero-art" aria-label="Minh họa nghệ thuật tình yêu">
-        <div className="art-orbit orbit-one"/><div className="art-orbit orbit-two"/>
-        <div className="art-disc"><div className="disc-inner"><span className="disc-small">A NOTE TO THE HEART</span><Icon name="heart" size={60}/><strong>love<br/><i>is a little</i><br/>everyday thing.</strong><span className="disc-bottom">TAKE IT SLOW · FEEL IT ALL</span></div></div>
-        <span className="art-label label-top">made of little moments</span><span className="art-label label-bottom">♡  be here, be loved</span><span className="art-spark"><Icon name="sparkles" size={28}/></span>
+      <div className="hero-art">
+        <div className="art-card card-back"><span className="mini-label">QUICK QUIZ</span><b>03:25</b><div className="fake-bars"><i/><i/><i/><i/></div></div>
+        <div className="art-card card-main"><div className="art-card-top"><span>✦ DAILY CHALLENGE</span><span>01 / 10</span></div><div className="art-question">Bạn đã sẵn sàng<br/>thử thách bản thân?</div><div className="art-answer answer-one"><i>A</i> Bắt đầu thôi!</div><div className="art-answer"><i>B</i> Để xem nào…</div><div className="art-answer"><i>C</i> Chơi cùng bạn bè</div><div className="art-bottom"><span>✳ PLAYROOM</span><span>♡</span></div></div>
+        <div className="floating-note note-top">✨ Học mà chơi</div><div className="floating-note note-bottom">🎯 Thử thách mỗi ngày</div><div className="art-orb orb-a"/><div className="art-orb orb-b"/>
       </div>
-      <div className="hero-bottom"><span>SCROLL TO DISCOVER</span><span className="bottom-line"/><span>01 — 04</span></div>
+      <div className="hero-scroll">SCROLL TO EXPLORE <span>↓</span></div>
     </section>
 
-    <section className="intro-strip"><span>FOR THE CURIOUS HEARTS</span><p>Không cần lý do đặc biệt để có một ngày thật dễ thương.</p><Icon name="sparkles" size={19}/></section>
-
-    <section className="play-section section-wrap" id="play">
-      <div className="section-heading"><div><span className="eyebrow">THE PLAYROOM <b>01 / 03</b></span><h2>Chơi một chút,<br/><em>vui cả ngày.</em></h2></div><p>Chọn một trò bạn thích.<br/>Mỗi câu trả lời là một điều thú vị để khám phá.</p></div>
-      <div className="game-list">{games.map(game => <article className={`game-row ${game.playable ? 'game-active' : ''}`} key={game.number}>
-        <span className="game-number">{game.number}</span><span className="game-symbol"><Icon name={game.icon} size={25}/></span>
-        <div className="game-copy"><h3>{game.title}</h3><p>{game.text}</p></div><span className={`game-status ${game.playable ? 'status-ready' : ''}`}>{game.label}</span>
-        <button className="game-button" disabled={!game.playable} onClick={startQuiz} aria-label={game.action}>{game.playable ? <Icon name="arrow" size={20}/> : <span>•••</span>}</button>
-      </article>)}</div>
-      <div className="play-foot"><span>MORE LITTLE GAMES ARE ON THEIR WAY</span><span>♡</span></div>
+    <section className="join-band" id="join">
+      <div className="join-intro"><span className="join-icon">⌁</span><div><b>Đã có mã tham gia?</b><small>Nhập mã phòng công khai để vào chơi cùng mọi người.</small></div></div>
+      <div className="join-form"><input value={joinCode} onChange={e=>{setJoinCode(e.target.value);setNotice('')}} onKeyDown={e=>e.key==='Enter'&&join()} placeholder="Nhập mã tham gia" aria-label="Mã tham gia trò chơi công khai"/><button onClick={join}>Tham gia <span>→</span></button></div>
+      {notice&&<div className="join-notice" role="status">{notice}</div>}
     </section>
 
-    <section className="quote-section" id="story"><div className="quote-mark">“</div><span className="eyebrow">A GENTLE LITTLE REMINDER</span><h2>Hạnh phúc không cần<br/>phải thật lớn lao. <em>Chỉ cần thật lòng.</em></h2><p>Đôi khi là một câu hỏi han, một lần cùng cười, hay đơn giản là có người để trở về.</p><span className="quote-sign">A LITTLE LOVE NOTE</span><div className="quote-decoration"><Icon name="heart" size={30}/></div></section>
-
-    <section className="private-section section-wrap" id="our-place">
-      <div className="private-visual"><div className="private-visual-ring"/><div className="private-lock"><Icon name="lock" size={35}/></div><span className="private-stamp">ONLY THE TWO OF US · EST. 2023</span><span className="private-side-note">a place to keep our story</span></div>
-      <div className="private-content"><span className="eyebrow">OUR PRIVATE LITTLE WORLD <b>02 / 03</b></span><h2>Một nơi chỉ<br/><em>hai ta được vào.</em></h2><p>Những bức ảnh, câu chuyện, ngày đặc biệt và ký ức của hai đứa mình sẽ được cất giữ ở đây.</p><form className="private-form" onSubmit={unlock}><label htmlFor="private-password">MẬT KHẨU RIÊNG CỦA CHÚNG MÌNH</label><div className="password-field"><Icon name="lock" size={17}/><input id="private-password" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Nhập mật khẩu để tiếp tục" autoComplete="off"/><button type="submit" aria-label="Tiếp tục"><Icon name="arrow" size={18}/></button></div>{error && <p className="form-error">{error}</p>}</form><div className="privacy-note"><span/> Khu vực riêng tư · Chỉ dành cho hai người</div></div>
+    <section className="discover-section" id="discover">
+      <div className="section-title"><div><span className="eyebrow">THE PLAYROOM · 01</span><h2>Khám phá <em>trò chơi</em></h2><p>Chọn một chủ đề và bắt đầu hành trình khám phá của bạn.</p></div><div className="section-side-note">CHỌN TRÒ CHƠI PHÙ HỢP <span>✳</span></div></div>
+      <div className="filter-row" id="categories"><div className="category-tabs">{categories.map(c=><button key={c} className={category===c?'selected':''} onClick={()=>setCategory(c)}>{c}</button>)}</div><label className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm trò chơi..."/></label></div>
+      <div className="game-grid">{(showAll?filtered:filtered.slice(0,6)).map((g,index)=><article className="game-card" key={g.id}><div className={`game-art ${g.tone}`}><span className="game-category">{g.category}</span><span className="game-art-number">{String(g.id).padStart(2,'0')}</span><div className="game-art-symbol">{['♡','✦','◉','⌘','☼','✳'][g.id-1]}</div><span className="game-art-caption">PLAYROOM ORIGINAL</span></div><div className="game-card-body"><h3>{g.title}</h3><p>{g.description}</p><div className="game-meta"><span>♧ {g.players}</span><span>◷ {g.duration}</span></div><button className="play-button" onClick={()=>start(g)}>Chơi thử <span>→</span></button></div></article>)}</div>
+      {filtered.length===0&&<div className="empty-state">Không tìm thấy trò chơi phù hợp. Thử từ khóa khác nhé!</div>}
+      {filtered.length>3&&<div className="view-all-wrap"><button className="view-all" onClick={()=>setShowAll(!showAll)}>{showAll?'Thu gọn':'Xem tất cả trò chơi'} <span>{showAll?'↑':'→'}</span></button></div>}
     </section>
-    <footer className="footer"><a className="brand" href="#top"><span className="brand-mark"><Icon name="heart" size={17}/></span><span className="brand-name">THE LITTLE LOVE CLUB<span>MADE WITH A LITTLE LOVE</span></span></a><span className="footer-center">Một góc nhỏ, thật nhiều thương yêu.</span><a className="footer-top" href="#top">Lên đầu trang ↑</a></footer>
 
-    {quizOpen && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Trắc nghiệm ngôn ngữ yêu"><div className="quiz-dialog"><button className="modal-close" onClick={()=>setQuizOpen(false)} aria-label="Đóng"><Icon name="close" size={20}/></button><span className="eyebrow">A LITTLE LOVE QUIZ</span>{!finished ? <><div className="quiz-progress"><span style={{width:`${answers.length / questions.length * 100}%`}}/></div><div className="quiz-count">CÂU HỎI {step + 1} / {questions.length}</div><h2>{questions[step].title}</h2><div className="quiz-options">{questions[step].options.map((option,index)=><button key={option} onClick={()=>pick(index)}><span>{String(index+1).padStart(2,'0')}</span>{option}<Icon name="arrow" size={17}/></button>)}</div></> : <div className="quiz-finish"><Icon name="heart" size={42}/><span className="quiz-count">KẾT QUẢ CỦA BẠN</span><h2>Một trái tim thật đặc biệt.</h2><p>{result}</p><button className="button button-dark" onClick={()=>{setAnswers([]);setStep(0)}}>Chơi lại <Icon name="arrow" size={16}/></button></div>}<div className="dialog-foot">THE LITTLE LOVE CLUB <span>♡</span></div></div></div>}
+    <section className="feature-strip"><div className="feature-heading"><span className="eyebrow">WHY PLAYROOM?</span><h2>Không chỉ là<br/><em>một trò chơi.</em></h2></div><div className="feature-item"><span>01</span><b>Dễ bắt đầu</b><p>Chọn trò chơi yêu thích và khám phá ngay, không cần thao tác phức tạp.</p></div><div className="feature-item"><span>02</span><b>Chủ đề đa dạng</b><p>Từ kiến thức, trí tuệ đến tình yêu và những phút giây giải trí.</p></div><div className="feature-item"><span>03</span><b>Kết nối mọi người</b><p>Cùng chơi, cùng trả lời và tạo nên những khoảnh khắc vui vẻ.</p></div></section>
+
+    <section className="how-section" id="how"><div className="how-heading"><span className="eyebrow">START IN THREE STEPS · 03</span><h2>Bắt đầu thật <em>đơn giản.</em></h2></div><div className="steps"><div><span>01</span><b>Chọn trò chơi</b><p>Khám phá thư viện và chọn chủ đề bạn yêu thích.</p></div><div><span>02</span><b>Tham gia</b><p>Chơi thử trực tiếp hoặc nhập mã phòng công khai.</p></div><div><span>03</span><b>Vui hết mình</b><p>Trả lời câu hỏi, khám phá kết quả và chia sẻ niềm vui.</p></div></div></section>
+    <footer className="site-footer"><a className="logo" href="#home"><span className="logo-icon">✳</span><span>play<span className="logo-accent">room</span><small>LEARN · PLAY · CONNECT</small></span></a><span>Made for curious minds, with a little joy. ♡</span><a href="#home">Về đầu trang ↑</a></footer>
+
+    {active&&<div className="quiz-overlay" role="dialog" aria-modal="true" aria-label={active.title}><div className="quiz-panel"><button className="quiz-close" onClick={()=>setActive(null)} aria-label="Đóng">×</button><span className="eyebrow">PLAYROOM ORIGINAL · {active.category.toUpperCase()}</span><div className="quiz-progress"><i style={{width:`${Math.min(step,active.questions.length)/active.questions.length*100}%`}}/></div>{!finish?<><small className="quiz-counter">CÂU HỎI {step+1} / {active.questions.length}</small><h2>{active.questions[step]}</h2><div className="quiz-answers">{active.options[step].map((option,i)=><button key={option} onClick={()=>{setAnswers(a=>[...a,i]);setStep(s=>s+1)}}><span>{String.fromCharCode(65+i)}</span>{option}<b>→</b></button>)}</div></>:<div className="quiz-result"><span>✳</span><h2>Hoàn thành thử thách!</h2><p>Bạn đã hoàn thành {active.title}. Cảm ơn bạn đã tham gia chơi.</p><button className="primary-button" onClick={()=>{setStep(0);setAnswers([])}}>Chơi lại <span>↻</span></button><button className="secondary-link" onClick={()=>setActive(null)}>Quay lại thư viện</button></div>}<div className="quiz-foot">PLAYROOM <span>♡</span></div></div></div>}
   </main>
 }
 export default App
