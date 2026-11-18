@@ -1,71 +1,107 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-type Game = { id: number; title: string; description: string; category: string; players: string; duration: string; tone: string; questions: string[]; options: string[][] }
+type IconName = 'home' | 'compass' | 'grid' | 'bookmark' | 'clock' | 'trophy' | 'search' | 'arrow' | 'play' | 'users' | 'timer' | 'spark' | 'plus' | 'close' | 'check' | 'menu'
+type Question = { text: string; answers: string[]; correct: number; note: string }
+type Game = { id: string; title: string; description: string; category: string; level: string; minutes: number; players: string; color: string; symbol: string; questions: Question[] }
+const iconPaths: Record<IconName, string> = {
+  home:'M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z', compass:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm4-14-2.5 6.5L7 17l2.5-6.5L16 8Z',
+  grid:'M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z', bookmark:'M6 3h12v18l-6-4-6 4z',
+  clock:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-15v5l4 2', trophy:'M8 21h8m-4-4v4M7 4h10v5a5 5 0 0 1-10 0V4Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4',
+  search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z', arrow:'M5 12h14m-6-6 6 6-6 6', play:'m8 5 11 7-11 7z',
+  users:'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-7a4 4 0 0 1 0 8m1 3a4 4 0 0 1 3 4v2',
+  timer:'M10 2h4m-2 4v6l4 2m4-2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z', spark:'m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Zm7 12 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z',
+  plus:'M12 5v14m-7-7h14', close:'M6 6l12 12M18 6 6 18', check:'m5 12 4 4L19 6', menu:'M4 6h16M4 12h16M4 18h16'
+}
+function Icon({name,size=18}:{name:IconName;size?:number}) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={iconPaths[name]}/></svg> }
+
 const games: Game[] = [
-  { id: 1, title: 'Ngôn ngữ yêu thương', description: 'Khám phá cách bạn trao đi và đón nhận yêu thương.', category: 'Tình yêu', players: '2–8 người', duration: '5 phút', tone: 'rose', questions: ['Một ngày rảnh, bạn muốn làm gì nhất?', 'Điều gì khiến bạn cảm thấy được quan tâm?', 'Bạn thích nhận món quà nào?'], options: [['Đi đâu đó thật xa','Ở nhà nghỉ ngơi','Khám phá một nơi mới','Ở cạnh người thương'],['Một lời hỏi han','Một cái ôm','Được lắng nghe','Một hành động nhỏ'],['Một chuyến đi','Món quà bất ngờ','Bữa ăn tự nấu','Album kỷ niệm']] },
-  { id: 2, title: 'Bạn hiểu người ấy đến đâu?', description: 'Thử xem bạn nhớ được bao nhiêu điều nhỏ bé về nhau.', category: 'Tình yêu', players: '2–6 người', duration: '7 phút', tone: 'lilac', questions: ['Người ấy thích buổi hẹn nào?', 'Món quà nào sẽ làm người ấy vui?', 'Một ngày lý tưởng của người ấy là?'], options: [['Đi xem phim','Ăn tối','Đi dạo','Ở nhà'],['Hoa','Sách','Đồ công nghệ','Một bức thư'],['Nghỉ ngơi','Đi chơi','Gặp bạn bè','Ở bên gia đình']] },
-  { id: 3, title: 'Đố vui kiến thức tổng hợp', description: '10 câu hỏi nhanh để khởi động trí tò mò.', category: 'Kiến thức', players: '1–20 người', duration: '4 phút', tone: 'blue', questions: ['Hành tinh nào gần Mặt Trời nhất?', 'Đại dương lớn nhất là?', 'Một năm thường có bao nhiêu ngày?'], options: [['Sao Kim','Sao Thủy','Trái Đất','Sao Hỏa'],['Đại Tây Dương','Ấn Độ Dương','Thái Bình Dương','Bắc Băng Dương'],['364','365','366','360']] },
-  { id: 4, title: 'Thử thách trí nhớ', description: 'Quan sát, ghi nhớ và chọn đáp án thật nhanh.', category: 'Trí tuệ', players: '1–10 người', duration: '3 phút', tone: 'yellow', questions: ['Bạn thường ghi nhớ tốt nhất điều gì?', 'Khi học điều mới, bạn thích cách nào?', 'Bạn chọn thử thách nào?'], options: [['Hình ảnh','Con số','Âm thanh','Câu chuyện'],['Thực hành','Đọc hiểu','Nghe giảng','Thảo luận'],['Câu đố logic','Tìm điểm khác nhau','Ghi nhớ hình','Tính nhẩm']] },
-  { id: 5, title: 'Một ngày tích cực', description: 'Những câu hỏi nhỏ giúp cả nhóm bắt đầu ngày mới.', category: 'Phong cách sống', players: '2–12 người', duration: '5 phút', tone: 'green', questions: ['Điều gì làm bạn vui hôm nay?', 'Bạn muốn dành thời gian cho việc gì?', 'Năng lượng của bạn lúc này?'], options: [['Một cuộc gọi','Một tách cà phê','Một lời khen','Một kế hoạch'],['Gia đình','Bạn bè','Bản thân','Công việc'],['Tràn đầy','Bình thường','Cần nghỉ ngơi','Sẵn sàng bứt phá']] },
-  { id: 6, title: 'Quiz dành cho hội bạn', description: 'Vừa chơi vừa khám phá những điều bất ngờ về hội bạn.', category: 'Giải trí', players: '3–16 người', duration: '6 phút', tone: 'orange', questions: ['Ai thường đến muộn nhất?', 'Cả nhóm thích hoạt động nào?', 'Nếu đi chơi ngay, bạn chọn đâu?'], options: [['Tôi','Bạn thân','Người tổ chức','Không ai cả'],['Ăn uống','Du lịch','Chơi game','Xem phim'],['Biển','Núi','Thành phố','Ở nhà']] },
+ {id:'love-language',title:'Ngôn ngữ yêu thương',description:'Khám phá cách bạn trao đi và đón nhận yêu thương.',category:'Tình yêu',level:'Nhẹ nhàng',minutes:5,players:'2–8',color:'rose',symbol:'♡',questions:[
+  {text:'Điều gì khiến bạn cảm thấy được quan tâm nhất?',answers:['Một lời hỏi han chân thành','Một món quà bất ngờ','Được dành thời gian bên nhau','Một cái ôm thật lâu'],correct:2,note:'Mỗi người có một cách cảm nhận yêu thương riêng.'},
+  {text:'Một buổi hẹn lý tưởng với bạn là gì?',answers:['Cùng nấu một bữa ăn','Đi khám phá nơi mới','Xem phim và thư giãn','Trò chuyện thật lâu'],correct:3,note:'Những khoảnh khắc kết nối thường đến từ sự hiện diện.'},
+  {text:'Khi người thân mệt mỏi, bạn thường làm gì?',answers:['Lắng nghe họ chia sẻ','Tìm cách giải quyết giúp','Để họ có không gian nghỉ','Làm điều nhỏ khiến họ vui'],correct:0,note:'Lắng nghe cũng là một cách quan tâm rất đẹp.'}]},
+ {id:'know-them',title:'Bạn hiểu người ấy đến đâu?',description:'Những câu hỏi nhỏ về sở thích và thói quen.',category:'Tình yêu',level:'Vui vẻ',minutes:7,players:'2–6',color:'lilac',symbol:'✦',questions:[
+  {text:'Điều gì giúp bạn hiểu một người hơn?',answers:['Quan sát thói quen','Lắng nghe câu chuyện','Cùng trải qua trải nghiệm','Tất cả những điều trên'],correct:3,note:'Sự thấu hiểu được tạo nên từ nhiều khoảnh khắc.'},
+  {text:'Khi có bất đồng, điều gì nên làm trước?',answers:['Bình tĩnh lắng nghe','Im lặng thật lâu','Cố chứng minh mình đúng','Tránh nói chuyện'],correct:0,note:'Bình tĩnh và lắng nghe giúp cuộc trò chuyện tốt hơn.'},
+  {text:'Một kỷ niệm đáng nhớ thường đến từ đâu?',answers:['Món quà đắt tiền','Khoảnh khắc giản dị','Một nơi thật xa','Một bức ảnh đẹp'],correct:1,note:'Điều bình dị đôi khi ở lại lâu nhất.'}]},
+ {id:'general-knowledge',title:'Kiến thức tổng hợp',description:'Khởi động trí tò mò với những câu hỏi thú vị.',category:'Kiến thức',level:'Cơ bản',minutes:4,players:'1–20',color:'blue',symbol:'◈',questions:[
+  {text:'Hành tinh nào gần Mặt Trời nhất?',answers:['Sao Kim','Sao Thủy','Trái Đất','Sao Hỏa'],correct:1,note:'Sao Thủy là hành tinh gần Mặt Trời nhất.'},
+  {text:'Đại dương lớn nhất trên Trái Đất là?',answers:['Đại Tây Dương','Ấn Độ Dương','Thái Bình Dương','Bắc Băng Dương'],correct:2,note:'Thái Bình Dương chiếm diện tích lớn nhất.'},
+  {text:'Một năm thường có bao nhiêu ngày?',answers:['364','365','366','360'],correct:1,note:'Năm nhuận có 366 ngày.'}]},
+ {id:'brain-training',title:'Thử thách trí tuệ',description:'Rèn tư duy logic qua những câu hỏi nhanh.',category:'Trí tuệ',level:'Thử thách',minutes:6,players:'1–10',color:'amber',symbol:'⌘',questions:[
+  {text:'Số tiếp theo trong dãy 2, 4, 8, 16 là?',answers:['18','24','30','32'],correct:3,note:'Mỗi số được nhân đôi.'},
+  {text:'Một hình vuông có bao nhiêu cạnh?',answers:['3','4','5','6'],correct:1,note:'Hình vuông có bốn cạnh bằng nhau.'},
+  {text:'Nếu hôm nay là thứ Hai, 10 ngày nữa là?',answers:['Thứ Tư','Thứ Năm','Thứ Sáu','Chủ Nhật'],correct:1,note:'10 ngày sau thứ Hai là thứ Năm.'}]},
+ {id:'positive-day',title:'Một ngày tích cực',description:'Bắt đầu ngày mới bằng những điều đáng yêu.',category:'Phong cách sống',level:'Thư giãn',minutes:3,players:'2–12',color:'mint',symbol:'☼',questions:[
+  {text:'Điều nhỏ nào có thể làm ngày hôm nay tốt hơn?',answers:['Một cuộc gọi hỏi thăm','Một chút vận động','Một bữa ăn ngon','Cả ba điều trên'],correct:3,note:'Niềm vui có thể đến từ những điều rất nhỏ.'},
+  {text:'Khi căng thẳng, bạn nên thử?',answers:['Hít thở chậm','Nghỉ ngơi ngắn','Đi dạo nhẹ nhàng','Kết hợp các cách trên'],correct:3,note:'Hãy chọn cách phù hợp với bản thân.'},
+  {text:'Điều gì đáng để biết ơn hôm nay?',answers:['Gia đình và bạn bè','Sức khỏe','Cơ hội mới','Những điều bình dị'],correct:0,note:'Biết ơn giúp ta chú ý hơn đến điều tích cực.'}]},
+ {id:'friend-quiz',title:'Quiz dành cho hội bạn',description:'Cùng bạn bè khám phá những điều bất ngờ.',category:'Giải trí',level:'Sôi động',minutes:6,players:'3–16',color:'peach',symbol:'✳',questions:[
+  {text:'Một buổi tụ họp vui nhất cần điều gì?',answers:['Đồ ăn ngon','Trò chơi vui','Câu chuyện thú vị','Có đủ mọi người'],correct:3,note:'Điều quan trọng nhất là mọi người cùng vui.'},
+  {text:'Khi lên kế hoạch đi chơi, bạn thích?',answers:['Lên lịch chi tiết','Ngẫu hứng','Để cả nhóm quyết định','Tùy tâm trạng'],correct:2,note:'Cùng thống nhất giúp ai cũng thoải mái.'},
+  {text:'Kỷ niệm nào thường được nhắc lại?',answers:['Những lần cười không ngớt','Chuyến đi đáng nhớ','Trò đùa nội bộ','Tất cả'],correct:3,note:'Kỷ niệm đẹp thường được tạo nên cùng nhau.'}]},
+ {id:'science-fun',title:'Khám phá khoa học',description:'Những kiến thức thú vị về thế giới quanh ta.',category:'Kiến thức',level:'Cơ bản',minutes:5,players:'1–12',color:'blue',symbol:'⌬',questions:[
+  {text:'Nước đóng băng ở nhiệt độ nào (áp suất chuẩn)?',answers:['0°C','10°C','32°C','100°C'],correct:0,note:'Nước tinh khiết đóng băng ở 0°C.'},
+  {text:'Cơ quan nào bơm máu đi khắp cơ thể?',answers:['Phổi','Tim','Gan','Thận'],correct:1,note:'Tim hoạt động như một máy bơm tuần hoàn.'},
+  {text:'Ánh sáng Mặt Trời mất khoảng bao lâu để tới Trái Đất?',answers:['8 phút 20 giây','1 giây','1 giờ','24 giờ'],correct:0,note:'Khoảng 8 phút 20 giây.'}]},
+ {id:'word-play',title:'Vui cùng câu chữ',description:'Thử vốn từ và khả năng liên tưởng của bạn.',category:'Trí tuệ',level:'Vui vẻ',minutes:4,players:'1–8',color:'lilac',symbol:'Aa',questions:[
+  {text:'Từ nào đồng nghĩa gần nhất với “kiên trì”?',answers:['Bền bỉ','Vội vàng','Ngẫu nhiên','Do dự'],correct:0,note:'Kiên trì là bền bỉ theo đuổi mục tiêu.'},
+  {text:'Từ trái nghĩa với “rộng rãi” là?',answers:['Bao la','Chật hẹp','Thoáng đãng','Mênh mông'],correct:1,note:'Chật hẹp là từ trái nghĩa phù hợp.'},
+  {text:'Thành ngữ “Có công mài sắt…” kết thúc thế nào?',answers:['Có ngày nên kim','Có ngày thành công','Có ngày được vàng','Có ngày thành tài'],correct:0,note:'Có công mài sắt, có ngày nên kim.'}]},
+ {id:'daily-choice',title:'Bạn chọn điều gì?',description:'Một bộ câu hỏi nhẹ nhàng để hiểu mình hơn.',category:'Phong cách sống',level:'Thư giãn',minutes:3,players:'1–10',color:'mint',symbol:'☁',questions:[
+  {text:'Bạn muốn dành thời gian rảnh cho điều gì?',answers:['Học điều mới','Gặp người thân','Nghỉ ngơi','Khám phá nơi mới'],correct:0,note:'Không có lựa chọn đúng sai, hãy chọn điều bạn thích.'},
+  {text:'Bạn thích bắt đầu buổi sáng như thế nào?',answers:['Vận động nhẹ','Một tách đồ uống','Nghe nhạc','Lập kế hoạch'],correct:1,note:'Một khởi đầu dễ chịu tạo năng lượng tích cực.'},
+  {text:'Điều gì giúp bạn duy trì động lực?',answers:['Mục tiêu rõ ràng','Người đồng hành','Thói quen tốt','Tất cả'],correct:3,note:'Nhiều yếu tố cùng hỗ trợ tạo nên động lực.'}]}
 ]
-const categories = ['Tất cả','Tình yêu','Kiến thức','Trí tuệ','Phong cách sống','Giải trí']
-function App() {
-  const [query,setQuery] = useState('')
-  const [category,setCategory] = useState('Tất cả')
-  const [joinCode,setJoinCode] = useState('')
-  const [notice,setNotice] = useState('')
-  const [active,setActive] = useState<Game|null>(null)
-  const [step,setStep] = useState(0)
-  const [showAll,setShowAll] = useState(false)
-  const filtered = useMemo(()=>games.filter(g=>(category==='Tất cả'||g.category===category)&&(`${g.title} ${g.description}`.toLowerCase().includes(query.toLowerCase()))),[category,query])
-  const start=(game:Game)=>{setActive(game);setStep(0)}
-  const finish=active && step>=active.questions.length
-  const join=()=>{setNotice(joinCode.trim()?'Không tìm thấy phòng công khai với mã này. Hãy kiểm tra lại mã tham gia.':'Bạn hãy nhập mã tham gia của một trò chơi công khai.')}
-  return <main className="app-shell">
-    <header className="topbar">
-      <a className="logo" href="#home"><span className="logo-icon">✳</span><span>play<span className="logo-accent">room</span><small>LEARN · PLAY · CONNECT</small></span></a>
-      <nav className="main-nav"><a className="nav-active" href="#discover">Khám phá</a><a href="#categories">Danh mục</a><a href="#how">Cách chơi</a></nav>
-      <div className="top-actions"><a className="text-button" href="#how">Dành cho người tổ chức</a><a className="login-button" href="#join">Tham gia trò chơi <span>↗</span></a></div>
-    </header>
-
-    <section className="welcome-hero" id="home">
-      <div className="hero-copy">
-        <div className="eyebrow"><span className="live-dot"/> KHÔNG GIAN HỌC HỎI & GIẢI TRÍ</div>
-        <h1>Mỗi lần chơi,<br/><em>thêm một điều hay.</em></h1>
-        <p>Khám phá những bộ câu hỏi thú vị, thử thách kiến thức và kết nối với mọi người qua những trò chơi tương tác.</p>
-        <div className="hero-cta-row"><a className="primary-button" href="#discover">Khám phá trò chơi <span>→</span></a><a className="secondary-link" href="#how">Tìm hiểu cách chơi <span>↗</span></a></div>
-        <div className="hero-proof"><span className="avatar-stack"><i>H</i><i>♡</i><i>友</i></span><span>Chơi vui cùng bạn bè, gia đình và người thương</span></div>
-      </div>
-      <div className="hero-art">
-        <div className="art-card card-back"><span className="mini-label">QUICK QUIZ</span><b>03:25</b><div className="fake-bars"><i/><i/><i/><i/></div></div>
-        <div className="art-card card-main"><div className="art-card-top"><span>✦ DAILY CHALLENGE</span><span>01 / 10</span></div><div className="art-question">Bạn đã sẵn sàng<br/>thử thách bản thân?</div><div className="art-answer answer-one"><i>A</i> Bắt đầu thôi!</div><div className="art-answer"><i>B</i> Để xem nào…</div><div className="art-answer"><i>C</i> Chơi cùng bạn bè</div><div className="art-bottom"><span>✳ PLAYROOM</span><span>♡</span></div></div>
-        <div className="floating-note note-top">✨ Học mà chơi</div><div className="floating-note note-bottom">🎯 Thử thách mỗi ngày</div><div className="art-orb orb-a"/><div className="art-orb orb-b"/>
-      </div>
-      <div className="hero-scroll">SCROLL TO EXPLORE <span>↓</span></div>
+const categories=['Tất cả','Tình yêu','Kiến thức','Trí tuệ','Phong cách sống','Giải trí']
+type QuizResult={id:string;score:number;total:number;date:string}
+function App(){
+ const [query,setQuery]=useState(''); const [category,setCategory]=useState('Tất cả'); const [joinCode,setJoinCode]=useState(''); const [notice,setNotice]=useState(''); const [active,setActive]=useState<Game|null>(null); const [step,setStep]=useState(0); const [answers,setAnswers]=useState<number[]>([]); const [selected,setSelected]=useState<number|null>(null); const [showAll,setShowAll]=useState(false); const [saved,setSaved]=useState<string[]>([]); const [recent,setRecent]=useState<string[]>([]); const [results,setResults]=useState<QuizResult[]>([]); const [mobileMenu,setMobileMenu]=useState(false); const [tab,setTab]=useState('Đề xuất')
+ useEffect(()=>{try{setSaved(JSON.parse(localStorage.getItem('hhw-saved')||'[]'));setRecent(JSON.parse(localStorage.getItem('hhw-recent')||'[]'));setResults(JSON.parse(localStorage.getItem('hhw-results')||'[]'))}catch{/* ignore invalid local data */}},[])
+ const filtered=useMemo(()=>games.filter(g=>(category==='Tất cả'||g.category===category)&&(`${g.title} ${g.description}`.toLowerCase().includes(query.toLowerCase()))&&(tab!=='Đã lưu'||saved.includes(g.id))),(category,query,tab,saved])
+ const openGame=(game:Game)=>{setActive(game);setStep(0);setAnswers([]);setSelected(null);setRecent(old=>{const next=[game.id,...old.filter(id=>id!==game.id)].slice(0,5);localStorage.setItem('hhw-recent',JSON.stringify(next));return next})}
+ const finish=active!==null&&step>=active.questions.length
+ const choose=(index:number)=>{if(selected!==null)return;setSelected(index);setAnswers(old=>[...old,index])}
+ const nextQuestion=()=>{if(!active)return; if(step+1>=active.questions.length){const score=answers.reduce((sum,a,i)=>sum+(a===active.questions[i].correct?1:0),0);const record={id:active.id,score,total:active.questions.length,date:new Date().toISOString()};setResults(old=>{const next=[record,...old].slice(0,30);localStorage.setItem('hhw-results',JSON.stringify(next));return next});setStep(active.questions.length)}else{setStep(s=>s+1);setSelected(null)}}
+ const toggleSaved=(id:string)=>setSaved(old=>{const next=old.includes(id)?old.filter(x=>x!==id):[id,...old];localStorage.setItem('hhw-saved',JSON.stringify(next));return next})
+ const join=()=>setNotice(joinCode.trim()?'Mã này chưa thuộc phòng chơi đang hoạt động. Hiện trang đang hỗ trợ chơi luyện tập trực tiếp.':'Nhập mã phòng chơi để tiếp tục.')
+ const recentGames=recent.map(id=>games.find(g=>g.id===id)).filter((g):g is Game=>Boolean(g))
+ const savedGames=games.filter(g=>saved.includes(g.id))
+ const gameList=showAll?filtered:filtered.slice(0,6)
+ return <div className="platform">
+  <aside className={`sidebar ${mobileMenu?'sidebar-open':''}`}>
+   <a className="brand" href="#home"><span className="brand-mark"><Icon name="spark" size={21}/></span><span>playroom<small>LEARN · PLAY · CONNECT</small></span></a>
+   <div className="side-label">KHÔNG GIAN CỦA BẠN</div>
+   <nav className="side-nav">
+    <a className="side-link active" href="#discover" onClick={()=>setMobileMenu(false)}><Icon name="compass"/>Khám phá</a>
+    <a className="side-link" href="#categories" onClick={()=>setMobileMenu(false)}><Icon name="grid"/>Danh mục</a>
+    <button className={`side-link ${tab==='Đã lưu'?'active':''}`} onClick={()=>{setTab('Đã lưu');setCategory('Tất cả');setMobileMenu(false)}}><Icon name="bookmark"/>Đã lưu <span className="side-count">{saved.length||''}</span></button>
+    <a className="side-link" href="#recent" onClick={()=>setMobileMenu(false)}><Icon name="clock"/>Chơi gần đây</a>
+    <a className="side-link" href="#progress" onClick={()=>setMobileMenu(false)}><Icon name="trophy"/>Kết quả của tôi</a>
+   </nav>
+   <div className="sidebar-bottom"><div className="side-promo"><span className="promo-icon"><Icon name="spark" size={18}/></span><b>Mỗi ngày một điều mới</b><p>Chọn một thử thách nhỏ và bắt đầu ngay hôm nay.</p><a href="#discover">Khám phá ngay <Icon name="arrow" size={14}/></a></div><div className="sidebar-foot">Một góc vui dành cho mọi người <span>✦</span></div></div>
+  </aside>
+  {mobileMenu&&<button className="menu-scrim" onClick={()=>setMobileMenu(false)} aria-label="Đóng menu"/>}
+  <main className="main-area" id="home">
+   <header className="topbar"><button className="mobile-menu-button" onClick={()=>setMobileMenu(!mobileMenu)} aria-label="Mở menu"><Icon name="menu"/></button><div className="breadcrumb">Không gian học hỏi <span>/</span> <b>Khám phá</b></div><div className="topbar-actions"><span className="top-date">THỨC DẬY TRÍ TÒ MÒ MỖI NGÀY</span><div className="profile-avatar">P</div></div></header>
+   <div className="content-wrap">
+    <section className="welcome-row"><div><div className="welcome-kicker"><span className="status-dot"/> KHÁM PHÁ · HỌC HỎI · KẾT NỐI</div><h1>Chào bạn, hôm nay<br/><em>mình chơi gì nhỉ?</em></h1><p>Một chút tò mò, một thử thách thú vị — bắt đầu từ đây nhé.</p></div><div className="welcome-art"><div className="welcome-orbit orbit-one"/><div className="welcome-orbit orbit-two"/><div className="welcome-paper"><span>DAILY</span><b>Q.</b><i>✦</i></div><span className="welcome-star star-one">✳</span><span className="welcome-star star-two">✦</span><span className="welcome-note">A LITTLE<br/>CHALLENGE</span></div></section>
+    <section className="join-card" id="join"><div className="join-card-copy"><span className="join-symbol"><Icon name="users" size={21}/></span><div><b>Bạn có mã tham gia?</b><p>Nhập mã phòng để tham gia trò chơi cùng mọi người.</p></div></div><div className="join-input-wrap"><input value={joinCode} onChange={e=>{setJoinCode(e.target.value);setNotice('')}} onKeyDown={e=>e.key==='Enter'&&join()} placeholder="Ví dụ: 482 915" aria-label="Mã phòng chơi công khai"/><button onClick={join}>Tham gia <Icon name="arrow" size={16}/></button></div>{notice&&<div className="join-notice" role="status">{notice}</div>}</section>
+    <section className="discover-block" id="discover"><div className="section-heading"><div><span className="section-kicker">THƯ VIỆN TRÒ CHƠI</span><h2>Khám phá điều <em>thú vị</em></h2><p>Chọn một chủ đề, tìm cảm hứng và bắt đầu chơi.</p></div><span className="section-index">01 <i>/ 04</i></span></div>
+     <div className="toolbar" id="categories"><div className="tabs">{['Đề xuất','Đã lưu'].map(t=><button key={t} className={tab===t?'tab-active':''} onClick={()=>setTab(t)}>{t}{t==='Đã lưu'&&saved.length>0&&<small>{saved.length}</small>}</button>)}</div><label className="search-field"><Icon name="search" size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm trò chơi, chủ đề..."/><kbd>⌘ K</kbd></label></div>
+     <div className="category-row">{categories.map(c=><button key={c} className={category===c?'category-active':''} onClick={()=>setCategory(c)}>{c}</button>)}</div>
+     <div className="results-caption"><span>{tab==='Đã lưu'?'TRÒ CHƠI ĐÃ LƯU':'DÀNH CHO BẠN'} <b>{filtered.length.toString().padStart(2,'0')}</b></span><button onClick={()=>{setCategory('Tất cả');setTab('Đề xuất');setQuery('')}}>Đặt lại bộ lọc</button></div>
+     <div className="game-grid">{gameList.map((g,i)=><article className="game-card" key={g.id}><div className={`game-cover cover-${g.color}`}><span className="cover-index">{String(i+1).padStart(2,'0')} / PLAYROOM</span><button className={`save-button ${saved.includes(g.id)?'is-saved':''}`} onClick={()=>toggleSaved(g.id)} aria-label={saved.includes(g.id)?'Bỏ lưu':'Lưu trò chơi'}><Icon name="bookmark" size={16}/></button><span className="cover-glyph">{g.symbol}</span><span className="cover-category">{g.category}</span></div><div className="game-info"><div className="game-title-row"><h3>{g.title}</h3><span className="game-level">{g.level}</span></div><p>{g.description}</p><div className="game-details"><span><Icon name="users" size={14}/>{g.players} người</span><span><Icon name="timer" size={14}/>{g.minutes} phút</span><span>{g.questions.length} câu hỏi</span></div><button className="game-start" onClick={()=>openGame(g)}>Chơi luyện tập <Icon name="arrow" size={16}/></button></div></article>)}</div>
+     {filtered.length===0&&<div className="empty-state"><span><Icon name="search" size={22}/></span><b>Chưa tìm thấy trò chơi phù hợp</b><p>Thử đổi từ khóa hoặc chọn danh mục khác nhé.</p></div>}
+     {filtered.length>6&&<div className="more-row"><button onClick={()=>setShowAll(!showAll)}>{showAll?'Thu gọn danh sách':'Xem thêm trò chơi'} <Icon name="arrow" size={15}/></button></div>}
     </section>
-
-    <section className="join-band" id="join">
-      <div className="join-intro"><span className="join-icon">⌁</span><div><b>Đã có mã tham gia?</b><small>Nhập mã phòng công khai để vào chơi cùng mọi người.</small></div></div>
-      <div className="join-form"><input value={joinCode} onChange={e=>{setJoinCode(e.target.value);setNotice('')}} onKeyDown={e=>e.key==='Enter'&&join()} placeholder="Nhập mã tham gia" aria-label="Mã tham gia trò chơi công khai"/><button onClick={join}>Tham gia <span>→</span></button></div>
-      {notice&&<div className="join-notice" role="status">{notice}</div>}
-    </section>
-
-    <section className="discover-section" id="discover">
-      <div className="section-title"><div><span className="eyebrow">THE PLAYROOM · 01</span><h2>Khám phá <em>trò chơi</em></h2><p>Chọn một chủ đề và bắt đầu hành trình khám phá của bạn.</p></div><div className="section-side-note">CHỌN TRÒ CHƠI PHÙ HỢP <span>✳</span></div></div>
-      <div className="filter-row" id="categories"><div className="category-tabs">{categories.map(c=><button key={c} className={category===c?'selected':''} onClick={()=>setCategory(c)}>{c}</button>)}</div><label className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm trò chơi..."/></label></div>
-      <div className="game-grid">{(showAll?filtered:filtered.slice(0,6)).map(g=><article className="game-card" key={g.id}><div className={`game-art ${g.tone}`}><span className="game-category">{g.category}</span><span className="game-art-number">{String(g.id).padStart(2,'0')}</span><div className="game-art-symbol">{['♡','✦','◉','⌘','☼','✳'][g.id-1]}</div><span className="game-art-caption">PLAYROOM ORIGINAL</span></div><div className="game-card-body"><h3>{g.title}</h3><p>{g.description}</p><div className="game-meta"><span>♧ {g.players}</span><span>◷ {g.duration}</span></div><button className="play-button" onClick={()=>start(g)}>Chơi thử <span>→</span></button></div></article>)}</div>
-      {filtered.length===0&&<div className="empty-state">Không tìm thấy trò chơi phù hợp. Thử từ khóa khác nhé!</div>}
-      {filtered.length>3&&<div className="view-all-wrap"><button className="view-all" onClick={()=>setShowAll(!showAll)}>{showAll?'Thu gọn':'Xem tất cả trò chơi'} <span>{showAll?'↑':'→'}</span></button></div>}
-    </section>
-
-    <section className="feature-strip"><div className="feature-heading"><span className="eyebrow">WHY PLAYROOM?</span><h2>Không chỉ là<br/><em>một trò chơi.</em></h2></div><div className="feature-item"><span>01</span><b>Dễ bắt đầu</b><p>Chọn trò chơi yêu thích và khám phá ngay, không cần thao tác phức tạp.</p></div><div className="feature-item"><span>02</span><b>Chủ đề đa dạng</b><p>Từ kiến thức, trí tuệ đến tình yêu và những phút giây giải trí.</p></div><div className="feature-item"><span>03</span><b>Kết nối mọi người</b><p>Cùng chơi, cùng trả lời và tạo nên những khoảnh khắc vui vẻ.</p></div></section>
-
-    <section className="how-section" id="how"><div className="how-heading"><span className="eyebrow">START IN THREE STEPS · 03</span><h2>Bắt đầu thật <em>đơn giản.</em></h2></div><div className="steps"><div><span>01</span><b>Chọn trò chơi</b><p>Khám phá thư viện và chọn chủ đề bạn yêu thích.</p></div><div><span>02</span><b>Tham gia</b><p>Chơi thử trực tiếp hoặc nhập mã phòng công khai.</p></div><div><span>03</span><b>Vui hết mình</b><p>Trả lời câu hỏi, khám phá kết quả và chia sẻ niềm vui.</p></div></div></section>
-    <footer className="site-footer"><a className="logo" href="#home"><span className="logo-icon">✳</span><span>play<span className="logo-accent">room</span><small>LEARN · PLAY · CONNECT</small></span></a><span>Made for curious minds, with a little joy. ♡</span><a href="#home">Về đầu trang ↑</a></footer>
-
-    {active&&<div className="quiz-overlay" role="dialog" aria-modal="true" aria-label={active.title}><div className="quiz-panel"><button className="quiz-close" onClick={()=>setActive(null)} aria-label="Đóng">×</button><span className="eyebrow">PLAYROOM ORIGINAL · {active.category.toUpperCase()}</span><div className="quiz-progress"><i style={{width:`${Math.min(step,active.questions.length)/active.questions.length*100}%`}}/></div>{!finish?<><small className="quiz-counter">CÂU HỎI {step+1} / {active.questions.length}</small><h2>{active.questions[step]}</h2><div className="quiz-answers">{active.options[step].map((option,i)=><button key={option} onClick={()=>setStep(s=>s+1)}><span>{String.fromCharCode(65+i)}</span>{option}<b>→</b></button>)}</div></>:<div className="quiz-result"><span>✳</span><h2>Hoàn thành thử thách!</h2><p>Bạn đã hoàn thành {active.title}. Cảm ơn bạn đã tham gia chơi.</p><button className="primary-button" onClick={()=>setStep(0)}>Chơi lại <span>↻</span></button><button className="secondary-link" onClick={()=>setActive(null)}>Quay lại thư viện</button></div>}<div className="quiz-foot">PLAYROOM <span>♡</span></div></div></div>}
+    <section className="recent-block" id="recent"><div className="compact-heading"><div><span className="section-kicker">TIẾP TỤC HÀNH TRÌNH</span><h2>Chơi gần đây</h2></div><span className="muted-caption">LƯU TRÊN THIẾT BỊ NÀY</span></div>{recentGames.length?<div className="recent-list">{recentGames.map(g=><button className="recent-item" key={g.id} onClick={()=>openGame(g)}><span className={`recent-icon cover-${g.color}`}>{g.symbol}</span><span className="recent-text"><b>{g.title}</b><small>{g.category} · {g.minutes} phút</small></span><Icon name="arrow" size={17}/></button>)}</div>:<div className="recent-empty"><Icon name="clock" size={19}/><span>Bạn chưa chơi trò nào. Những trò đã chơi sẽ xuất hiện tại đây.</span></div>}</section>
+    <section className="progress-block" id="progress"><div className="progress-intro"><span className="section-kicker">DẤU ẤN CỦA BẠN</span><h2>Mỗi câu trả lời<br/><em>là một bước tiến.</em></h2><p>Kết quả luyện tập được lưu trên trình duyệt của thiết bị này.</p></div><div className="progress-stats"><div><span>TỔNG LƯỢT CHƠI</span><b>{results.length}</b><small>lượt luyện tập đã hoàn thành</small></div><div><span>CÂU TRẢ LỜI ĐÚNG</span><b>{results.reduce((n,r)=>n+r.score,0)}<i>/{results.reduce((n,r)=>n+r.total,0)}</i></b><small>tổng câu trả lời đúng</small></div><div><span>TRÒ CHƠI ĐÃ LƯU</span><b>{saved.length}</b><small>để dành cho lần sau</small></div></div></section>
+    <section className="saved-strip"><div><span className="saved-mark"><Icon name="bookmark" size={19}/></span><div><b>Góc trò chơi yêu thích</b><p>{savedGames.length?savedGames.map(g=>g.title).slice(0,3).join(' · '):'Lưu lại những trò chơi bạn muốn thử sau nhé.'}</p></div></div><button onClick={()=>{setTab('Đã lưu');document.getElementById('discover')?.scrollIntoView({behavior:'smooth'})}}>Xem đã lưu <Icon name="arrow" size={15}/></button></section>
+    <footer className="footer"><a className="brand footer-brand" href="#home"><span className="brand-mark"><Icon name="spark" size={19}/></span><span>playroom<small>LEARN · PLAY · CONNECT</small></span></a><span>Nuôi dưỡng trí tò mò, mỗi ngày một chút. <b>✦</b></span><a href="#home">Về đầu trang ↑</a></footer>
+   </div>
   </main>
+  {active&&<div className="quiz-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setActive(null)}}><section className="quiz-dialog" role="dialog" aria-modal="true" aria-label={active.title}><button className="dialog-close" onClick={()=>setActive(null)} aria-label="Đóng"><Icon name="close"/></button><div className="dialog-top"><span className="dialog-brand"><Icon name="spark" size={15}/> PLAYROOM PRACTICE</span><span>{active.category}</span></div><div className="dialog-progress"><i style={{width:`${finish?100:step/active.questions.length*100}%`}}/></div>{!finish?<><div className="question-meta">CÂU {step+1} <span>/ {active.questions.length}</span></div><h2>{active.questions[step].text}</h2><div className="answer-list">{active.questions[step].answers.map((answer,i)=><button key={answer} className={selected===i?(i===active.questions[step].correct?'answer-correct':'answer-wrong'):''} onClick={()=>choose(i)} disabled={selected!==null}><span>{String.fromCharCode(65+i)}</span>{answer}{selected===i&&<Icon name={i===active.questions[step].correct?'check':'close'} size={17}/>}</button>)}</div>{selected!==null&&<div className="answer-feedback"><b>{selected===active.questions[step].correct?'Chính xác!':'Chưa chính xác rồi!'}</b><p>{active.questions[step].note}</p><button onClick={nextQuestion}>{step+1===active.questions.length?'Xem kết quả':'Câu tiếp theo'} <Icon name="arrow" size={15}/></button></div>}</>:<div className="result-view"><span className="result-spark"><Icon name="trophy" size={28}/></span><span className="section-kicker">HOÀN THÀNH THỬ THÁCH</span><h2>Bạn đã làm rất tốt!</h2><strong>{answers.reduce((sum,a,i)=>sum+(a===active.questions[i].correct?1:0),0)}<i>/{active.questions.length}</i></strong><p>Số câu trả lời đúng trong trò chơi <b>{active.title}</b>.</p><div className="result-actions"><button onClick={()=>openGame(active)}>Chơi lại <Icon name="arrow" size={15}/></button><button className="result-secondary" onClick={()=>setActive(null)}>Về thư viện</button></div></div>}<div className="dialog-foot">MỘT CHÚT TÒ MÒ, THÊM NHIỀU ĐIỀU HAY <span>✦</span></div></section></div>}
+ </div>
 }
 export default App
